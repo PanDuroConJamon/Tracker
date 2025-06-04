@@ -1,146 +1,87 @@
 import re
-#
-# def lex_tree(text: str, dictionary: dict):
-#     result = []
-#     lines = text.split("\n")
-#
-#     # Patrones
-#     number_pattern = re.compile(r'^\d+(\.\d+)?$')
-#     identifier_pattern = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')  # Comienza con letra o _, seguido de letras/números/_
-#
-#     for line_num, line in enumerate(lines, start=1):
-#         # Separar comentarios
-#         line = line.strip()
-#         if '//' in line:
-#             comment_index = line.find('//')
-#             code_part = line[:comment_index]
-#             comment = line[comment_index:]
-#         else:
-#             code_part = line
-#             comment = ""
-#
-#         # Analizar código sin comentario
-#         words = re.findall(r'\w+|\S', code_part)
-#         for word in words:
-#             if word in dictionary:
-#                 component = dictionary[word]
-#             elif number_pattern.match(word):
-#                 component = "number"
-#             elif identifier_pattern.match(word):
-#                 component = "identifier"
-#             else:
-#                 component = "symbol"
-#             result.append({
-#                 "word": word,
-#                 "component": component,
-#                 "line": line_num
-#             })
-#
-#         # Analizar comentario si existe
-#         if comment:
-#             result.append({
-#                 "word": comment.strip(),
-#                 "component": "comment",
-#                 "line": line_num
-#             })
-#
-#     return result
-errors = []
-def lex_tree(text: str, dictionary: dict):
-    result = []
+
+def lex_tree(text: str, dictionary_definitions: dict):
+    tokens = []
     errors = []
-    lines = text.split("\n")
 
-    number_pattern = re.compile(r'^\d+(\.\d+)?$')  # enteros o decimales
-    identifier_pattern = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+    # Patrones de Expresiones Regulares Nombradas
+    # El orden aquí es importante para la captura con re.finditer
+    token_patterns = [
+        ('COMMENT', r'//.*'),
+        ('NUMBER', r'\d+(\.\d+)?'),
+        ('WORD', r'[A-Za-z_][A-Za-z0-9_]*'),
+        ('SPECIAL_CHAR', r'[][().,:]'),
+        ('WHITESPACE', r'\s+'),
+        ('MISMATCH', r'.')
+    ]
 
-    for line_num, line in enumerate(lines, start=1):
-        if '//' in line:
-            comment_index = line.find('//')
-            code_part = line[:comment_index]
-            comment = line[comment_index:]
-        else:
-            code_part = line
-            comment = ""
+    master_regex = re.compile('|'.join(f'(?P<{name}>{pattern})' for name, pattern in token_patterns))
+    lines = text.splitlines() # Usar splitlines() para manejar diferentes finales de línea
 
-        words = re.findall(r'\w+|[^\s\w]', code_part)
+    for line_num, line_content in enumerate(lines, start=1):
+        for match in master_regex.finditer(line_content):
+            token_type = match.lastgroup    # Nombre del grupo que coincidió
+            value = match.group(token_type) # El texto coincidente
+            column = match.start() + 1      # Columna inicial (1-indexed)
 
-        for word in words:
-            if word in dictionary:
-                component = dictionary[word]
-            elif number_pattern.match(word):
-                component = "numero"
-            elif identifier_pattern.match(word):
-                component = "identificador"
-            else:
-                component = "simbolo_desconocido"
+            if token_type == 'COMMENT':
+                tokens.append({
+                    "word": value,
+                    "component": "comentario",
+                    "line": line_num,
+                    "column": column
+                })
+            elif token_type == 'NUMBER':
+                tokens.append({
+                    "word": value,
+                    "component": "numero",
+                    "line": line_num,
+                    "column": column
+                })
+            elif token_type == 'WORD':
+                if value in dictionary_definitions:
+                    component = dictionary_definitions[value]
+                else:
+                    component = "identificador"
+                tokens.append({
+                    "word": value,
+                    "component": component,
+                    "line": line_num,
+                    "column": column
+                })
+            elif token_type == 'SPECIAL_CHAR':
+                # Verificar si el carácter especial está en el diccionario de definiciones
+                if value in dictionary_definitions:
+                    component = dictionary_definitions[value]
+                    tokens.append({
+                        "word": value,
+                        "component": component,
+                        "line": line_num,
+                        "column": column
+                    })
+                else:
+                    # Si es un carácter especial no definido en el diccionario, es un error
+                    errors.append({
+                        "error": f"Símbolo especial desconocido: '{value}'",
+                        "line": line_num,
+                        "column": column
+                    })
+            elif token_type == 'WHITESPACE':
+                pass  # Ignorar espacios en blanco
+            elif token_type == 'MISMATCH':
+                # Cualquier otro carácter que no haya coincidido con las reglas anteriores
+                # es un símbolo desconocido/error.
                 errors.append({
-                    "error": f"Símbolo desconocido: '{word}'",
-                    "line": line_num
+                    "error": f"Símbolo desconocido: '{value}'",
+                    "line": line_num,
+                    "column": column
+                })
+            else: # Esto no debería ocurrir si MISMATCH es el último
+                 errors.append({
+                    "error": f"Error de tokenización inesperado con '{value}'",
+                    "line": line_num,
+                    "column": column
                 })
 
-            result.append({
-                "word": word,
-                "component": component,
-                "line": line_num
-            })
 
-        if comment:
-            result.append({
-                "word": comment.strip(),
-                "component": "comentario",
-                "line": line_num
-            })
-
-    return result, errors
-
-
-
-# import re
-#
-#
-# def lex_tree(text: str, dictionary: dict):
-#     result = []
-#     lines = text.split("\n")
-#
-#     # Patrones para reconocer números e identificadores
-#     number_pattern = re.compile(r'^\d+(\.\d+)?$')  # enteros o decimales
-#     identifier_pattern = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
-#
-#     for line_num, line in enumerate(lines, start=1):
-#         # Separar comentarios
-#         if '//' in line:
-#             comment_index = line.find('//')
-#             code_part = line[:comment_index]
-#             comment = line[comment_index:]
-#         else:
-#             code_part = line
-#             comment = ""
-#
-#         # Extrae palabras y símbolos individuales
-#         words = re.findall(r'\w+|[^\s\w]', code_part)
-#
-#         for word in words:
-#             if word in dictionary:
-#                 component = dictionary[word]
-#             elif number_pattern.match(word):
-#                 component = "number"
-#             elif identifier_pattern.match(word):
-#                 component = "identifier"
-#             else:
-#                 component = "unknown_symbol"
-#
-#             result.append({
-#                 "word": word,
-#                 "component": component,
-#                 "line": line_num
-#             })
-#
-#         if comment:
-#             result.append({
-#                 "word": comment.strip(),
-#                 "component": "comment",
-#                 "line": line_num
-#             })
-#
-#     return result
+    return tokens, errors

@@ -61,7 +61,6 @@ class Parser:
             return None
         return ast
 
-    # GRAMMAR RULES PARSING METHODS
 
     def parse_programa(self):
         try:
@@ -168,7 +167,6 @@ class Parser:
 
             # Manejo de modificadores opcionales: .INSTRUMENTO() y/o .RETRASO()
             # Asumimos que si ambos están, .INSTRUMENTO va primero, luego .RETRASO
-            # Check for '.INSTRUMENTO'
             if self.current_token and self.current_token['component'] == 'punto':
                 # Guardamos el estado por si el modificador no es el esperado o falla
                 idx_backup = self.current_token_index
