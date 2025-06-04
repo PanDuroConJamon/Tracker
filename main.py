@@ -10,7 +10,7 @@ from tkinter import ttk
 class TerminalCLI(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Terminal CLI")
+        self.title("Tracker Terminal")
         self.geometry("800x600")
         self.configure(bg="black")
 
@@ -96,8 +96,74 @@ class TerminalCLI(tk.Tk):
 
 # SECCIÓN DE COMANDOS
     def run_command(self, event=None):
-        content = self.text_widget.get("1.0", tk.END).strip()
-        print("[RUN]:", content)
+        def run_command(self, event=None):
+            content = self.text_widget.get("1.0", tk.END).strip()
+            print(
+                f"[RUN Command Activated ({self.title()})]: Iniciando análisis completo...")  # Mensaje para la consola de Python
+
+            # 1. Limpiar la consola de errores del IDE al inicio
+            self.clear_error_console()
+            self.error_console.config(state="normal")  # Asegurar que esté habilitada para inserción
+
+            if not content:
+                self.show_message_in_console("No hay código para analizar.")
+                self.error_console.config(state="disabled")  # Deshabilitar al final
+                return
+
+            # 2. Realizar Análisis Léxico
+            print("Ejecutando análisis léxico...")
+            tokens, lexical_errors = lex.lex_tree(content, dictionary.tokens())
+
+            # Mostrar errores léxicos si existen
+            if lexical_errors:
+                self.show_lexical_errors(lexical_errors)
+                print(f"Errores léxicos encontrados: {len(lexical_errors)}")
+            else:
+                print("Análisis léxico completado sin errores.")
+
+            # 3. Realizar Análisis Sintáctico (incluso si hay errores léxicos)
+            # El parser recibirá los tokens que el lexer haya podido generar.
+            # Si el lexer falló catastróficamente y 'tokens' es vacío o muy incorrecto,
+            # el parser probablemente generará muchos errores, lo cual es esperado en este flujo.
+            print("Ejecutando análisis sintáctico...")
+            parser_obj = sintactico.Parser(tokens)  # Pasamos los tokens, sean cuales sean
+            ast_resultado = parser_obj.parse()
+            syntactic_errors = parser_obj.errors  # Acceder a los errores del parser
+
+            # Mostrar errores sintácticos si existen
+            if syntactic_errors:
+                self.show_syntactic_errors(syntactic_errors)
+                print(f"Errores sintácticos encontrados: {len(syntactic_errors)}")
+            else:
+                # Solo se considera éxito sintáctico si el AST se generó y no hay errores explícitos
+                if ast_resultado:
+                    print("Análisis sintáctico completado sin errores.")
+                else:
+                    # Esto puede pasar si parse() devuelve None sin añadir errores a parser_obj.errors
+                    # o si los tokens eran completamente inutilizables.
+                    print(
+                        "Análisis sintáctico finalizó pero no generó un AST válido (posiblemente debido a tokens inutilizables).")
+
+
+            if not lexical_errors and not syntactic_errors and ast_resultado:
+                self.show_message_in_console(
+                    "¡Análisis completo exitoso! El código es léxica y sintácticamente correcto.", is_error_header=True)
+
+            elif lexical_errors or syntactic_errors:
+                self.show_message_in_console("El análisis encontró errores. Por favor, revísalos.",
+                                             is_error_header=True)
+            else:  # Ni errores, ni AST (ej. código válido pero vacío después de comentarios)
+                if not tokens:  # Si el lexer no produjo tokens (ej. solo comentarios o vacío)
+                    self.show_message_in_console("Análisis completo: El código está vacío o solo contiene comentarios.",
+                                                 is_error_header=True)
+                else:  # Tokens producidos pero el parser no generó AST ni errores (caso raro)
+                    self.show_message_in_console(
+                        "Análisis completo finalizado. No se generó AST ni se reportaron errores explícitos.",
+                        is_error_header=True)
+
+            # 5. Deshabilitar la consola de errores al final de todas las operaciones de inserción
+            self.error_console.config(state="disabled")
+            print("Proceso de run_command finalizado.")
 
     def save_content(self, event=None):
         content = self.text_widget.get("1.0", tk.END).strip()
@@ -152,7 +218,7 @@ class TerminalCLI(tk.Tk):
         else:
             self.show_message_in_console("El análisis sintáctico no produjo un resultado o falló inesperadamente.")
 
-# FIN SECCIÓN DE COMANDOS
+# FIN SECCI
 
     def clear_error_console(self):
         """Limpia la consola de errores."""
