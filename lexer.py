@@ -80,16 +80,16 @@ def lex_tree(text: str, dictionary: dict):
                 })
 
             result.append({
-                "palabra": word,
-                "componente": component,
-                "linea": line_num
+                "word": word,
+                "component": component,
+                "line": line_num
             })
 
         if comment:
             result.append({
-                "palabra": comment.strip(),
-                "componente": "comentario",
-                "linea": line_num
+                "word": comment.strip(),
+                "component": "comentario",
+                "line": line_num
             })
 
     return result, errors

@@ -49,6 +49,7 @@ def tokens():
         ":": "double_punto",
 
         # Tipos
+        #tipo de nota
         "DO": "tipo_nota",
         "RE": "tipo_nota",
         "MI": "tipo_nota",
@@ -58,12 +59,14 @@ def tokens():
         "SI": "tipo_nota",
         "DI": "tipo_nota",
 
+        #tipo de instrumento
         "FLAUTA": "tipo_instrumento",
         "PLATO": "tipo_instrumento",
         "TAMBOR": "tipo_instrumento",
         "GUITARRA": "tipo_instrumento",
         "BAJO": "tipo_instrumento",
 
+        #tipo de frecuencia
         "SEN": "tipo_frecuencia",
         "TRI": "tipo_frecuencia",
         "CUA": "tipo_frecuencia",
