@@ -2,7 +2,7 @@ import tkinter as tk
 import re
 import dictionary
 import lexer as lex
-import parser as sintactico
+import parser
 from tkinter import ttk
 
 
@@ -94,6 +94,7 @@ class TerminalCLI(tk.Tk):
                 end = f"1.0+{match.end()}c"
                 self.text_widget.tag_add(word, start, end)
 
+# SECCIÓN DE COMANDOS
     def run_command(self, event=None):
         content = self.text_widget.get("1.0", tk.END).strip()
         print("[RUN]:", content)
@@ -138,33 +139,20 @@ class TerminalCLI(tk.Tk):
                 "No hay tokens para el análisis sintáctico (código fuente vacío o solo comentarios).")
             return
 
-        # Opcional: Mostrar tabla de símbolos si deseas, incluso antes del sintáctico
-        # self.show_symbol_table(tokens)
 
-        # 2. Análisis Sintáctico
-        # Usamos 'sintactico.Parser' porque importaste 'parser' como 'sintactico'
-        parser_obj = sintactico.Parser(tokens)
-        ast_resultado = parser_obj.parse()  # El método parse() de tu clase Parser
+        parser_obj = parser.Parser(tokens)
+        ast_resultado = parser_obj.parse()
 
         if parser_obj.errors:
             self.show_syntactic_errors(parser_obj.errors)
             self.show_message_in_console("El análisis sintáctico encontró errores.")
         elif ast_resultado:
             self.show_message_in_console("¡Análisis Sintáctico Exitoso!")
-            # Opcional: Mostrar el AST. Puede ser en una nueva ventana.
             self.display_ast_in_treeview(ast_resultado)
-            # También puedes imprimirlo en la consola de Python para debugging:
-            # import json
-            # print("\n--- AST Generado ---")
-            # print(json.dumps(ast_resultado, indent=2))
-            # print("--------------------")
         else:
-            # Esto podría ocurrir si parser.parse() devuelve None sin errores explícitos,
-            # o si hubo un error no capturado en la lista de errores.
             self.show_message_in_console("El análisis sintáctico no produjo un resultado o falló inesperadamente.")
 
-        # --- NUEVAS FUNCIONES AUXILIARES (o actualizadas) ---
-        # (Asegúrate de que show_lexical_errors ya existe y funciona como esperas)
+# FIN SECCIÓN DE COMANDOS
 
     def clear_error_console(self):
         """Limpia la consola de errores."""
@@ -180,7 +168,6 @@ class TerminalCLI(tk.Tk):
 
     def show_syntactic_errors(self, errors):
         """Muestra los errores sintácticos en la consola de errores."""
-        # No es necesario limpiar aquí si clear_error_console ya se llamó
         self.error_console.config(state="normal")
 
         if not errors:
@@ -244,13 +231,8 @@ class TerminalCLI(tk.Tk):
                     self.display_ast_in_treeview(value, key_item)  # Llamada recursiva para el valor (list)
 
         elif isinstance(ast_node, list):
-            # Si el nodo actual es una lista (generalmente un hijo de un dict, como 'body' o 'lista_instrucciones')
-            # Iterar sobre sus elementos y añadirlos bajo el 'parent_item' que representa la lista
             for i, item in enumerate(ast_node):
-                # El parent_item ya es el nodo que representa la lista (ej. <lista_instrucciones>)
-                # No creamos un nodo para 'i' (índice) a menos que sea necesario.
-                self.display_ast_in_treeview(item, parent_item)  # Llamada recursiva para cada elemento
-
+                self.display_ast_in_treeview(item, parent_item)
 
 
 
