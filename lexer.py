@@ -69,27 +69,27 @@ def lex_tree(text: str, dictionary: dict):
             if word in dictionary:
                 component = dictionary[word]
             elif number_pattern.match(word):
-                component = "number"
+                component = "numero"
             elif identifier_pattern.match(word):
-                component = "identifier"
+                component = "identificador"
             else:
-                component = "unknown_symbol"
+                component = "simbolo_desconocido"
                 errors.append({
                     "error": f"Símbolo desconocido: '{word}'",
                     "line": line_num
                 })
 
             result.append({
-                "word": word,
-                "component": component,
-                "line": line_num
+                "palabra": word,
+                "componente": component,
+                "linea": line_num
             })
 
         if comment:
             result.append({
-                "word": comment.strip(),
-                "component": "comentario",
-                "line": line_num
+                "palabra": comment.strip(),
+                "componente": "comentario",
+                "linea": line_num
             })
 
     return result, errors

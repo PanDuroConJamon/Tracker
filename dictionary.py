@@ -40,7 +40,7 @@ def tokens():
         "COMPONER":"COMPONER",
 
         # Delimitadores
-        "(": "left_paren",
+        "(": "_paren",
         ")": "right_paren",
         "[": "left_block",
         "]": "right_block",
